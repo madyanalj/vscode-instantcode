@@ -1,27 +1,32 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import { ExtensionContext, languages, CodeLens, Range } from 'vscode';
+import { Project } from 'ts-morph';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export const activate = (context: ExtensionContext) => {
+  const disposable = languages.registerCodeLensProvider('typescript', {
+    provideCodeLenses: async (document) => {
+      const project = new Project();
+      const file = project.createSourceFile(
+        `/tmp/vscode-instantcode${document.uri.fsPath}`,
+        document.getText(),
+      );
+      const functions = file.getFunctions();
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "instantcode" is now active!');
+      const functionRuns = functions.map((func) => ({
+        func,
+        args: func.getParameters().map(() => 2),
+        result: 5,
+      }));
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('instantcode.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
+      const codeLensDetails = functionRuns.map(({ func, args, result }) => ({
+        title: `${func.getName() || ''}(${args.join(', ')}) => ${result}`,
+        position: document.positionAt(func.getEnd()).translate(1),
+      }));
 
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from InstantCode!');
-	});
+      return codeLensDetails.map(({ title, position }) =>
+        new CodeLens(new Range(position, position), { title, command: '' }),
+      );
+    },
+  });
 
-	context.subscriptions.push(disposable);
-}
-
-// this method is called when your extension is deactivated
-export function deactivate() {}
+  context.subscriptions.push(disposable);
+};
