@@ -1,4 +1,5 @@
 import { ExtensionContext, languages, CodeLens, Range } from 'vscode';
+import { runInNewContext } from 'vm';
 import { Project } from 'ts-morph';
 
 export const activate = (context: ExtensionContext) => {
@@ -10,15 +11,17 @@ export const activate = (context: ExtensionContext) => {
         document.getText(),
       );
       const functions = file.getFunctions();
+      const compiledJs = project.emitToMemory({ targetSourceFile: file }).getFiles()[0].text;
 
-      const functionRuns = functions.map((func) => ({
-        func,
-        args: func.getParameters().map(() => 2),
-        result: 5,
-      }));
+      const functionCalls = functions.map((func) => {
+        const args = func.getParameters().map(() => 5);
+        const sourceCode = `${func.getName() || ''}(${args.join(', ')})`;
+        const result = runInNewContext(`${compiledJs}; ${sourceCode}`);
+        return { func, sourceCode, result };
+      });
 
-      const codeLensDetails = functionRuns.map(({ func, args, result }) => ({
-        title: `${func.getName() || ''}(${args.join(', ')}) => ${result}`,
+      const codeLensDetails = functionCalls.map(({ func, sourceCode, result }) => ({
+        title: `${sourceCode} => ${JSON.stringify(result, null, 1)}`,
         position: document.positionAt(func.getEnd()).translate(1),
       }));
 
