@@ -2,11 +2,11 @@ import { ExtensionContext, languages, CodeLens, Range } from 'vscode';
 import { Project } from 'ts-morph';
 
 export const activate = (context: ExtensionContext) => {
-  const disposable = languages.registerCodeLensProvider('typescript', {
+  const disposable = languages.registerCodeLensProvider(['typescript', 'javascript'], {
     provideCodeLenses: async (document) => {
       const project = new Project();
       const file = project.createSourceFile(
-        `/tmp/vscode-instantcode${document.uri.fsPath}`,
+        '/tmp/vscode-instantcode/eval.ts',
         document.getText(),
       );
       const functions = file.getFunctions();
