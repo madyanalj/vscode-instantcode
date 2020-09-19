@@ -1,6 +1,7 @@
 import { ExtensionContext, languages, CodeLens, Range } from 'vscode';
 import { runInNewContext } from 'vm';
 import { Project } from 'ts-morph';
+import { random } from 'faker';
 
 export const activate = (context: ExtensionContext) => {
   const disposable = languages.registerCodeLensProvider(['typescript', 'javascript'], {
@@ -14,7 +15,7 @@ export const activate = (context: ExtensionContext) => {
       const compiledJs = project.emitToMemory({ targetSourceFile: file }).getFiles()[0].text;
 
       const functionCalls = functions.map((func) => {
-        const args = func.getParameters().map(() => 5);
+        const args = func.getParameters().map(() => random.number({ min: -5, max: 5 }));
         const sourceCode = `${func.getName() || ''}(${args.join(', ')})`;
         const result = runInNewContext(`${compiledJs}; ${sourceCode}`);
         return { func, sourceCode, result };
