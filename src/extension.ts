@@ -1,7 +1,18 @@
 import { ExtensionContext, languages, CodeLens, Range } from 'vscode';
 import { runInNewContext } from 'vm';
-import { Project } from 'ts-morph';
+import { ParameterDeclaration, printNode, Project, ts } from 'ts-morph';
 import { random } from 'faker';
+
+const { factory } = ts;
+
+const generateArgument = (parameter: ParameterDeclaration) => {
+  switch (true) {
+    case parameter.getType().isString(): return factory.createStringLiteral(random.words());
+    case parameter.getType().isNumber(): return factory.createNumericLiteral(random.number({ min: -5, max: 5 }));
+    case parameter.getType().isBoolean(): return random.boolean() ? factory.createTrue() : factory.createFalse();
+    default: return factory.createIdentifier('undefined');
+  }
+};
 
 export const activate = (context: ExtensionContext) => {
   const disposable = languages.registerCodeLensProvider(['typescript', 'javascript'], {
@@ -15,8 +26,9 @@ export const activate = (context: ExtensionContext) => {
       const compiledJs = project.emitToMemory({ targetSourceFile: file }).getFiles()[0].text;
 
       const functionCalls = functions.map((func) => {
-        const args = func.getParameters().map(() => random.number({ min: -5, max: 5 }));
-        const sourceCode = `${func.getName() || ''}(${args.join(', ')})`;
+        const args = func.getParameters().map(generateArgument);
+        const callExpression = factory.createCallExpression(func.getNameNodeOrThrow().compilerNode, undefined, args);
+        const sourceCode = printNode(callExpression);
         const result = runInNewContext(`${compiledJs}; ${sourceCode}`);
         return { func, sourceCode, result };
       });
