@@ -1,15 +1,25 @@
 import { ExtensionContext, languages, CodeLens, Range } from 'vscode';
 import { runInNewContext } from 'vm';
-import { ParameterDeclaration, printNode, Project, ts } from 'ts-morph';
+import { Node, ParameterDeclaration, printNode, Project, ts, createWrappedNode } from 'ts-morph';
 import { random } from 'faker';
 
-const { factory } = ts;
+const { factory, getJSDocType } = ts;
 
 const generateArgument = (parameter: ParameterDeclaration) => {
+  const compilerType = parameter.getType().isAny()
+    && getJSDocType(parameter.compilerNode)
+    || parameter.getTypeNode()?.compilerNode;
+
+  if (!compilerType) {
+    return factory.createIdentifier('undefined');
+  }
+
+  const type = createWrappedNode(compilerType);
+
   switch (true) {
-    case parameter.getType().isString(): return factory.createStringLiteral(random.words());
-    case parameter.getType().isNumber(): return factory.createNumericLiteral(random.number({ min: -5, max: 5 }));
-    case parameter.getType().isBoolean(): return random.boolean() ? factory.createTrue() : factory.createFalse();
+    case Node.isStringKeyword(type): return factory.createStringLiteral(random.words());
+    case Node.isNumberKeyword(type): return factory.createNumericLiteral(random.number({ min: -5, max: 5 }));
+    case Node.isBooleanKeyword(type): return random.boolean() ? factory.createTrue() : factory.createFalse();
     default: return factory.createIdentifier('undefined');
   }
 };
