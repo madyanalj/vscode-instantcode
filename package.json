@@ -23,9 +23,11 @@
     "test": "node ./out/test/runTest.js"
   },
   "dependencies": {
+    "faker": "^5.1.0",
     "ts-morph": "^8.1.0"
   },
   "devDependencies": {
+    "@types/faker": "^5.1.0",
     "@types/glob": "^7.1.1",
     "@types/mocha": "^7.0.2",
     "@types/node": "^13.11.0",
