@@ -1,9 +1,15 @@
 import { ExtensionContext, languages, CodeLens, Range, TextDocument } from 'vscode';
 import { runInNewContext } from 'vm';
-import { Node, ParameterDeclaration, printNode, Project, ts, createWrappedNode, SourceFile, TypeNode, TypeLiteralNode, InterfaceDeclaration } from 'ts-morph';
+import { Node, ParameterDeclaration, printNode, Project, ts, createWrappedNode, SourceFile, TypeNode, TypeLiteralNode, InterfaceDeclaration, ScriptTarget, ModuleKind } from 'ts-morph';
 import { random } from 'faker';
 
 const { factory, getJSDocType } = ts;
+
+const RECOMMENDED_NODE_12_COMPILER_OPTIONS = {
+  lib: ['ES2019'],
+  module: ModuleKind.CommonJS,
+  target: ScriptTarget.ES2019,
+};
 
 type GeneratedArgument =
   ts.Identifier
@@ -93,8 +99,22 @@ const generateExpressions = (file: SourceFile) =>
     return { sourceCode, position };
   });
 
+type GeneratedExpression = ReturnType<typeof generateExpressions>[0];
+
+const evaluateExpression = (generatedExpression: GeneratedExpression, compiledJs: string) => {
+  try {
+    const result = runInNewContext(
+      `${compiledJs}; ${generatedExpression.sourceCode}`,
+      { exports: {}, require: () => { } },
+    );
+    return JSON.stringify(result, null, 1);
+  } catch ({ message }) {
+    return `🙀 ${message}`;
+  }
+};
+
 const provideCodeLenses = (document: TextDocument) => {
-  const project = new Project();
+  const project = new Project({ compilerOptions: RECOMMENDED_NODE_12_COMPILER_OPTIONS });
   const file = project.createSourceFile(
     '/tmp/vscode-instantcode/eval.ts',
     document.getText(),
@@ -103,13 +123,10 @@ const provideCodeLenses = (document: TextDocument) => {
 
   const generatedExpressions = generateExpressions(file);
 
-  const codeLensDetails = generatedExpressions.map(({ sourceCode, position }) => {
-    const result = runInNewContext(`${compiledJs}; ${sourceCode}`);
-    return {
-      title: `${sourceCode} => ${JSON.stringify(result, null, 1)}`,
-      position: document.positionAt(position),
-    };
-  });
+  const codeLensDetails = generatedExpressions.map((e) => ({
+    title: `${e.sourceCode} => ${evaluateExpression(e, compiledJs)}`,
+    position: document.positionAt(e.position),
+  }));
 
   return codeLensDetails.map(({ title, position }) =>
     new CodeLens(new Range(position, position), { title, command: '' }),
