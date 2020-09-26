@@ -38,7 +38,10 @@ const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
   }
 
   if (Node.isArrayTypeNode(typeNode)) {
-    const elements = [generateArgumentByTypeNode(typeNode.getElementTypeNode())];
+    const elements = Array.from(
+      { length: random.number({ min: 0, max: 5 }) },
+      () => generateArgumentByTypeNode(typeNode.getElementTypeNode()),
+    );
     return factory.createArrayLiteralExpression(elements);
   }
 
