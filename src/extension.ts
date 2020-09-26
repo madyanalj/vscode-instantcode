@@ -5,7 +5,13 @@ import { random } from 'faker';
 
 const { factory, getJSDocType } = ts;
 
-type GeneratedArgument = ts.Identifier | ts.StringLiteral | ts.NumericLiteral | ts.TrueLiteral | ts.FalseLiteral;
+type GeneratedArgument =
+  ts.Identifier
+  | ts.StringLiteral
+  | ts.NumericLiteral
+  | ts.TrueLiteral
+  | ts.FalseLiteral
+  | ts.ArrayLiteralExpression;
 
 const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
   if (Node.isStringKeyword(typeNode)) {
@@ -18,6 +24,11 @@ const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
 
   if (Node.isBooleanKeyword(typeNode)) {
     return random.boolean() ? factory.createTrue() : factory.createFalse();
+  }
+
+  if (Node.isArrayTypeNode(typeNode)) {
+    const elements = [generateArgumentByTypeNode(typeNode.getElementTypeNode())];
+    return factory.createArrayLiteralExpression(elements);
   }
 
   if (Node.isTypeReferenceNode(typeNode)) {
