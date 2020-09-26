@@ -11,7 +11,9 @@ const generateArgument = (parameter: ParameterDeclaration) => {
     || parameter.getTypeNode()?.compilerNode;
 
   if (!compilerType) {
-    return factory.createIdentifier('undefined');
+    return random.boolean()
+      ? factory.createStringLiteral(random.words())
+      : factory.createNumericLiteral(random.number({ min: -5, max: 5 }));
   }
 
   const type = createWrappedNode(compilerType);
