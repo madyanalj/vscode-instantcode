@@ -11,7 +11,8 @@ type GeneratedArgument =
   | ts.NumericLiteral
   | ts.TrueLiteral
   | ts.FalseLiteral
-  | ts.ArrayLiteralExpression;
+  | ts.ArrayLiteralExpression
+  | ts.ObjectLiteralExpression;
 
 const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
   if (Node.isStringKeyword(typeNode)) {
@@ -29,6 +30,16 @@ const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
   if (Node.isArrayTypeNode(typeNode)) {
     const elements = [generateArgumentByTypeNode(typeNode.getElementTypeNode())];
     return factory.createArrayLiteralExpression(elements);
+  }
+
+  if (Node.isTypeLiteralNode(typeNode)) {
+    const properties = typeNode.getMembers()
+      .filter(Node.isPropertySignature)
+      .map((s) => factory.createPropertyAssignment(
+        s.getName(),
+        generateArgumentByTypeNode(s.getTypeNodeOrThrow()),
+      ));
+    return factory.createObjectLiteralExpression(properties);
   }
 
   if (Node.isTypeReferenceNode(typeNode)) {
