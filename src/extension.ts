@@ -32,7 +32,7 @@ const generateArgumentForObjectTypeDeclaration = (declaration: TypeLiteralNode |
 
 const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
   if (Node.isStringKeyword(typeNode)) {
-    return factory.createStringLiteral(random.words());
+    return factory.createStringLiteral(random.words(random.arrayElement([1, 2])));
   }
 
   if (Node.isNumberKeyword(typeNode)) {
@@ -83,7 +83,7 @@ const generateArgumentByParameterDeclaration = (parameter: ParameterDeclaration)
 
   if (!typeNode) {
     return random.boolean()
-      ? factory.createStringLiteral(random.words())
+      ? factory.createStringLiteral(random.words(random.arrayElement([1, 2])))
       : factory.createNumericLiteral(random.number({ min: -5, max: 5 }));
   }
 
