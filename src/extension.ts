@@ -42,6 +42,12 @@ const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
     return factory.createObjectLiteralExpression(properties);
   }
 
+  if (Node.isUnionTypeNode(typeNode)) {
+    const typeNodes = typeNode.getTypeNodes();
+    const randomTypeNode = random.arrayElement(typeNodes);
+    return generateArgumentByTypeNode(randomTypeNode);
+  }
+
   if (Node.isTypeReferenceNode(typeNode)) {
     const declaration = typeNode.getTypeName().getSymbolOrThrow().getDeclarations().find(Node.isTypeAliasDeclaration);
     if (declaration) {
