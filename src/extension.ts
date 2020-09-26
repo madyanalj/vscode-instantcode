@@ -5,27 +5,43 @@ import { random } from 'faker';
 
 const { factory, getJSDocType } = ts;
 
-const generateArgumentByTypeNode = (type: TypeNode) => {
-  switch (true) {
-    case Node.isStringKeyword(type): return factory.createStringLiteral(random.words());
-    case Node.isNumberKeyword(type): return factory.createNumericLiteral(random.number({ min: -5, max: 5 }));
-    case Node.isBooleanKeyword(type): return random.boolean() ? factory.createTrue() : factory.createFalse();
-    default: return factory.createIdentifier('undefined');
+type GeneratedArgument = ts.Identifier | ts.StringLiteral | ts.NumericLiteral | ts.TrueLiteral | ts.FalseLiteral;
+
+const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
+  if (Node.isStringKeyword(typeNode)) {
+    return factory.createStringLiteral(random.words());
   }
+
+  if (Node.isNumberKeyword(typeNode)) {
+    return factory.createNumericLiteral(random.number({ min: -5, max: 5 }));
+  }
+
+  if (Node.isBooleanKeyword(typeNode)) {
+    return random.boolean() ? factory.createTrue() : factory.createFalse();
+  }
+
+  if (Node.isTypeReferenceNode(typeNode)) {
+    const declaration = typeNode.getTypeName().getSymbolOrThrow().getDeclarations().find(Node.isTypeAliasDeclaration);
+    if (declaration) {
+      return generateArgumentByTypeNode(declaration.getTypeNodeOrThrow());
+    }
+  }
+
+  return factory.createIdentifier('undefined');
 };
 
 const generateArgumentByParameterDeclaration = (parameter: ParameterDeclaration) => {
-  const compilerType = parameter.getType().isAny()
-    && getJSDocType(parameter.compilerNode)
-    || parameter.getTypeNode()?.compilerNode;
+  const jsDocType = getJSDocType(parameter.compilerNode);
+  const typeNode = parameter.getTypeNode()
+    || (jsDocType ? createWrappedNode(jsDocType) : null);
 
-  if (!compilerType) {
+  if (!typeNode) {
     return random.boolean()
       ? factory.createStringLiteral(random.words())
       : factory.createNumericLiteral(random.number({ min: -5, max: 5 }));
   }
 
-  return generateArgumentByTypeNode(createWrappedNode(compilerType));
+  return generateArgumentByTypeNode(typeNode);
 };
 
 const generateExpressions = (file: SourceFile) =>
