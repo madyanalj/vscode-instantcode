@@ -1,6 +1,6 @@
 import { ExtensionContext, languages, CodeLens, Range, TextDocument } from 'vscode';
 import { runInNewContext } from 'vm';
-import { Node, ParameterDeclaration, printNode, Project, ts, createWrappedNode, SourceFile, TypeNode } from 'ts-morph';
+import { Node, ParameterDeclaration, printNode, Project, ts, createWrappedNode, SourceFile, TypeNode, TypeLiteralNode, InterfaceDeclaration } from 'ts-morph';
 import { random } from 'faker';
 
 const { factory, getJSDocType } = ts;
@@ -13,6 +13,16 @@ type GeneratedArgument =
   | ts.FalseLiteral
   | ts.ArrayLiteralExpression
   | ts.ObjectLiteralExpression;
+
+const generateArgumentForObjectTypeDeclaration = (declaration: TypeLiteralNode | InterfaceDeclaration) => {
+  const properties = declaration.getMembers()
+    .filter(Node.isPropertySignature)
+    .map((s) => factory.createPropertyAssignment(
+      s.getName(),
+      generateArgumentByTypeNode(s.getTypeNodeOrThrow()),
+    ));
+  return factory.createObjectLiteralExpression(properties);
+};
 
 const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
   if (Node.isStringKeyword(typeNode)) {
@@ -33,13 +43,7 @@ const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
   }
 
   if (Node.isTypeLiteralNode(typeNode)) {
-    const properties = typeNode.getMembers()
-      .filter(Node.isPropertySignature)
-      .map((s) => factory.createPropertyAssignment(
-        s.getName(),
-        generateArgumentByTypeNode(s.getTypeNodeOrThrow()),
-      ));
-    return factory.createObjectLiteralExpression(properties);
+    return generateArgumentForObjectTypeDeclaration(typeNode);
   }
 
   if (Node.isUnionTypeNode(typeNode)) {
@@ -49,9 +53,14 @@ const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
   }
 
   if (Node.isTypeReferenceNode(typeNode)) {
-    const declaration = typeNode.getTypeName().getSymbolOrThrow().getDeclarations().find(Node.isTypeAliasDeclaration);
-    if (declaration) {
-      return generateArgumentByTypeNode(declaration.getTypeNodeOrThrow());
+    const declarations = typeNode.getTypeName().getSymbolOrThrow().getDeclarations();
+    const typeAliasDeceleration = declarations.find(Node.isTypeAliasDeclaration);
+    if (typeAliasDeceleration) {
+      return generateArgumentByTypeNode(typeAliasDeceleration.getTypeNodeOrThrow());
+    }
+    const interfaceDeclaration = declarations.find(Node.isInterfaceDeclaration);
+    if (interfaceDeclaration) {
+      return generateArgumentForObjectTypeDeclaration(interfaceDeclaration);
     }
   }
 
