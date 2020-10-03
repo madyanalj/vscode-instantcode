@@ -1,9 +1,9 @@
 import { ExtensionContext, languages, CodeLens, Range, TextDocument } from 'vscode';
 import { runInNewContext } from 'vm';
-import { Node, ParameterDeclaration, printNode, Project, ts, createWrappedNode, SourceFile, TypeNode, TypeLiteralNode, InterfaceDeclaration, ScriptTarget, ModuleKind } from 'ts-morph';
+import { Node, ParameterDeclaration, printNode, Project, ts, createWrappedNode, SourceFile, TypeNode, TypeLiteralNode, InterfaceDeclaration, ScriptTarget, ModuleKind, FunctionDeclaration, ArrowFunction } from 'ts-morph';
 import { random } from 'faker';
 
-const { factory, getJSDocType } = ts;
+const { SyntaxKind, factory, getJSDocType } = ts;
 
 const RECOMMENDED_NODE_12_COMPILER_OPTIONS = {
   lib: ['ES2019'],
@@ -90,14 +90,30 @@ const generateArgumentByParameterDeclaration = (parameter: ParameterDeclaration)
   return generateArgumentByTypeNode(typeNode);
 };
 
-const generateExpressions = (file: SourceFile) =>
-  file.getFunctions().map((func) => {
-    const args = func.getParameters().map(generateArgumentByParameterDeclaration);
-    const callExpression = factory.createCallExpression(func.getNameNodeOrThrow().compilerNode, undefined, args);
-    const sourceCode = printNode(callExpression);
-    const position = func.getEnd() + 1;
-    return { sourceCode, position };
-  });
+const generateFunctionCallExpression = (declaration: FunctionDeclaration | ArrowFunction, name: string) => {
+  const args = declaration.getParameters().map(generateArgumentByParameterDeclaration);
+  const callExpression = factory.createCallExpression(
+    factory.createIdentifier(name),
+    undefined,
+    args,
+  );
+  const sourceCode = printNode(callExpression);
+  const position = declaration.getStart();
+  return { sourceCode, position };
+};
+
+const generateExpressions = (file: SourceFile) => {
+  const functionDecelerationCalls = file.getFunctions()
+    .filter((d) => d.getName())
+    .map((d) => generateFunctionCallExpression(d, d.getNameOrThrow()));
+
+  const arrowFunctionCalls = file.getVariableDeclarations()
+    .filter((d) => Node.isIdentifier(d.getNameNode()))
+    .filter((d) => d.getInitializerIfKind(SyntaxKind.ArrowFunction))
+    .map((d) => generateFunctionCallExpression(d.getInitializerIfKindOrThrow(SyntaxKind.ArrowFunction), d.getName()));
+
+  return [...functionDecelerationCalls, ...arrowFunctionCalls];
+};
 
 type GeneratedExpression = ReturnType<typeof generateExpressions>[0];
 
