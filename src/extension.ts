@@ -11,6 +11,12 @@ const RECOMMENDED_NODE_12_COMPILER_OPTIONS = {
   target: ScriptTarget.ES2019,
 };
 
+const parseCode = (source: string) => {
+  const project = new Project({ compilerOptions: RECOMMENDED_NODE_12_COMPILER_OPTIONS });
+  const file = project.createSourceFile('/tmp/vscode-instantcode/eval.ts', source);
+  return { project, file };
+};
+
 type GeneratedArgument =
   ts.Identifier
   | ts.StringLiteral
@@ -71,6 +77,12 @@ const generateArgumentByTypeNode = (typeNode: TypeNode): GeneratedArgument => {
     if (interfaceDeclaration) {
       return generateArgumentForObjectTypeDeclaration(interfaceDeclaration);
     }
+    const typeParameterDeclaration = declarations.find(Node.isTypeParameterDeclaration);
+    if (typeParameterDeclaration) {
+      const { file } = parseCode('declare const foo: number');
+      const newTypeNode = file.getVariableDeclarationOrThrow('foo').getTypeNodeOrThrow();
+      return generateArgumentByTypeNode(newTypeNode);
+    }
   }
 
   return factory.createIdentifier('undefined');
@@ -130,11 +142,7 @@ const evaluateExpression = (generatedExpression: GeneratedExpression, compiledJs
 };
 
 const provideCodeLenses = (document: TextDocument) => {
-  const project = new Project({ compilerOptions: RECOMMENDED_NODE_12_COMPILER_OPTIONS });
-  const file = project.createSourceFile(
-    '/tmp/vscode-instantcode/eval.ts',
-    document.getText(),
-  );
+  const { project, file } = parseCode(document.getText());
   const compiledJs = project.emitToMemory({ targetSourceFile: file }).getFiles()[0].text;
 
   const generatedExpressions = generateExpressions(file);
