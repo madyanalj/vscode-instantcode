@@ -4,6 +4,9 @@
   "description": "Run your JavaScript and TypeScript code with random test data on the fly",
   "version": "0.0.1",
   "publisher": "madyanalj",
+  "author": {
+    "name": "Madyan"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/madyanalj/vscode-instantcode"
