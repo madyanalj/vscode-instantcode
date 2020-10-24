@@ -1,65 +1,29 @@
-# instantcode README
+# InstantCode
 
-This is the README for your extension "instantcode". After writing up a brief description, we recommend including the following sections.
+This VSCode extension allows JavaScript and TypeScript developers to get instant feedback on their code as they type it! 💨
+
+Forget about code playgrounds and REPLs. Say goodbye to waiting for your entire project to compile before you can see your logged values or debugger to run. If you want to see how a certain code block behaves just wrap it in a function and watch your code getting instantly evaluated as you type inside your editor! ⚡️
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+🔥 Runs your code as you type it
 
-For example if there is an image subfolder under your extension project workspace:
+![Demonstrating function evaluation as the user types code](images/demo-playground.gif)
 
-\!\[feature X\]\(images/feature-x.png\)
+🔥 Generates random test data on the fly
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+![Demonstrating random test data generated for each function parameter](images/demo-random-tests.gif)
 
-## Requirements
+🔥 Works with discriminated unions
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+![Demonstrating discriminated union support](images/demo-discriminated-union-support.gif)
 
-## Extension Settings
+🔥 Works with more complex types
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+![Demonstrating complex type support](images/demo-type-support.gif)
 
-For example:
+## Caveats
 
-This extension contributes the following settings:
+This extension is currently at an experimental stage. It does not yet support external file imports. All types and functions referenced must be declared within the same file for the extension to work correctly.
 
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Issues and Pull Requests are more than welcome 🤗
