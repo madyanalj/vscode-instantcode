@@ -2,11 +2,11 @@
 
 This VSCode extension allows JavaScript and TypeScript developers to get instant feedback on their code as they type it! 💨
 
-Forget about code playgrounds and REPLs. Say goodbye to waiting for your entire project to compile before you can see your logged values or debugger to run. If you want to see how a certain code block behaves just wrap it in a function and watch your code getting instantly evaluated as you type inside your editor! ⚡️
+Forget about code playgrounds and REPLs. Say goodbye to waiting for your entire project to compile before you can see your logged values or debugger to run. If you want to see the result of a code block just wrap it in a function and watch your code getting instantly evaluated as you type inside your editor! ⚡️
 
 ## Features
 
-🔥 Runs your code as you type it
+🔥 Runs your functions as you type them
 
 ![Demonstrating function evaluation as the user types code](images/demo-playground.gif)
 
